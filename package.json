@@ -1,0 +1,25 @@
+{
+  "name": "express-sample",
+  "version": "1.0.0",
+  "description": "Simple knowledge base app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsmereka/node-express-sample.git"
+  },
+  "author": "Taras Smereka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tsmereka/node-express-sample/issues"
+  },
+  "homepage": "https://github.com/tsmereka/node-express-sample#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "mongoose": "^5.1.4",
+    "pug": "^2.0.3"
+  }
+}
