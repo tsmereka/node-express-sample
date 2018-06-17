@@ -2,6 +2,9 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const expressValidator = require('express-validator');
+const flash = require('connect-flash');
+const session = require('express-session');
 
 // Connect to mongo
 mongoose.connect('mongodb://localhost/nodekb');
@@ -20,7 +23,7 @@ db.on('error', function(error){
 // Init app
 const app = express();
 
-// Bring in models
+// Bring in Article model
 let Article = require('./models/article');
 
 // Load view engine
@@ -31,18 +34,51 @@ app.set('view engine', 'pug');
 // parse application/X-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json());
+
+// Set public folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Express session middleware
+app.use(session({
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: true
+}));
+
+// Express message middleware
+app.use(require('connect-flash')());
+app.use(function( req, res, next) {
+    res.locals.messages = require('express-messages')(req, res);
+    next();
+});
+
+// Express validator middleware
+app.use(expressValidator({
+    errorFormatter: function(param, msg, value) {
+        var namespace = param.split('.')
+        , root = namespace.shift()
+        , formParam = root;
+
+        while (namespace.length) {
+            formParam += '[' + namespace.shift() + ']';
+        }
+        return {
+            param: formParam,
+            msg: msg,
+            value: value
+        };
+    }
+}));
 
 // Home route
 app.get('/', function(req, res)
 {
     Article.find({}, function(err, articles){
-        if (err)
-        {
+        if (err) {
             console.log(err);
         }
-        else
-        {
+        else {
             res.render('index', {
                 title: 'Articles',
                 articles: articles
@@ -51,35 +87,9 @@ app.get('/', function(req, res)
     });
 });
 
-// Add route
-app.get('/articles/add', function(req, res)
-{
-    res.render('add_article', {
-        title:'Add Article'
-    });
-});
-
-// Add submit POST route
-app.post('/articles/add', function(req, res)
-{
-    let article = new Article();
-    article.title = req.body.title;
-    article.author = req.body.author;
-    article.body = req.body.body;
-
-    article.save(function(error)
-    {
-        if (error)
-        {
-            console.log(error);
-            return;
-        }
-        else
-        {
-            res.redirect('/');
-        }
-    });
-});
+// Route files
+let articles = require('./routes/articles.js');
+app.use('/articles', articles);
 
 // Start server
 app.listen(3000, function()
